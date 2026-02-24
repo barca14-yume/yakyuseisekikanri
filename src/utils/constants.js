@@ -125,6 +125,68 @@ export const TOTAL_BASES_MAP = {
     'HR': 4,
 };
 
+// ===== 守備関連の定数 =====
+
+// 守備位置
+export const POSITION_OPTIONS = [
+    { value: 'P', label: '投手', short: 'P' },
+    { value: 'C', label: '捕手', short: 'C' },
+    { value: '1B', label: '一塁手', short: '1B' },
+    { value: '2B', label: '二塁手', short: '2B' },
+    { value: '3B', label: '三塁手', short: '3B' },
+    { value: 'SS', label: '遊撃手', short: 'SS' },
+    { value: 'LF', label: '左翼手', short: 'LF' },
+    { value: 'CF', label: '中堅手', short: 'CF' },
+    { value: 'RF', label: '右翼手', short: 'RF' },
+];
+
+// 守備機会の種類
+export const FIELDING_PLAY_OPTIONS = [
+    { value: 'groundball', label: 'ゴロ捕球', icon: '⚡' },
+    { value: 'flyball', label: 'フライ捕球', icon: '🔼' },
+    { value: 'liner', label: 'ライナー捕球', icon: '➡️' },
+    { value: 'throw', label: '送球', icon: '💨' },
+    { value: 'tag', label: 'タッチプレー', icon: '🏷️' },
+    { value: 'relay', label: '中継プレー', icon: '🔄' },
+    { value: 'bunt_field', label: 'バント処理', icon: '🔹' },
+    { value: 'cover', label: 'ベースカバー', icon: '🛡️' },
+    { value: 'backup', label: 'カバーリング', icon: '📐' },
+    { value: 'pickoff', label: '牽制', icon: '⚠️' },
+    { value: 'catch', label: '捕球（捕手）', icon: '🧤' },
+    { value: 'other', label: 'その他', icon: '📝' },
+];
+
+// 守備結果
+export const FIELDING_RESULT_OPTIONS = [
+    { value: 'putout', label: '刺殺', color: '#10b981' },
+    { value: 'assist', label: '補殺', color: '#3b82f6' },
+    { value: 'error', label: '失策', color: '#ef4444' },
+    { value: 'fine_play', label: 'ファインプレー', color: '#f59e0b' },
+    { value: 'passed_ball', label: '捕逸', color: '#f97316' },
+    { value: 'no_play', label: '処理なし（カバーのみ）', color: '#64748b' },
+];
+
+// ===== 投手成績関連の定数 =====
+
+// 投手の勝敗
+export const PITCHING_DECISION_OPTIONS = [
+    { value: 'win', label: '勝ち', color: '#10b981' },
+    { value: 'loss', label: '負け', color: '#ef4444' },
+    { value: 'save', label: 'セーブ', color: '#3b82f6' },
+    { value: 'hold', label: 'ホールド', color: '#06b6d4' },
+    { value: 'no_decision', label: '記録なし', color: '#64748b' },
+];
+
+// イニング数の選択肢（1/3イニング単位）
+export const INNINGS_OPTIONS = [];
+for (let i = 0; i <= 7; i++) {
+    INNINGS_OPTIONS.push({ value: i, label: `${i}` });
+    if (i < 7) {
+        INNINGS_OPTIONS.push({ value: i + 1 / 3, label: `${i} 1/3` });
+        INNINGS_OPTIONS.push({ value: i + 2 / 3, label: `${i} 2/3` });
+    }
+}
+
 /**
  * 投球履歴からカウントを自動計算する
  * @param {Array} pitches - 投球データの配列

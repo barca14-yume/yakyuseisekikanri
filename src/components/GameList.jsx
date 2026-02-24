@@ -11,6 +11,7 @@ import {
 import {
     RESULT_OPTIONS, HIT_RESULTS, QUALITY_OPTIONS, SESSION_TYPE_OPTIONS,
     PITCH_RESULT_OPTIONS, ZONE_OPTIONS, PITCH_TYPE_OPTIONS, FOUL_DIRECTION_OPTIONS,
+    POSITION_OPTIONS, FIELDING_PLAY_OPTIONS, FIELDING_RESULT_OPTIONS,
 } from '../utils/constants';
 import { calculateStats, formatStat } from '../utils/stats';
 
@@ -152,6 +153,74 @@ function SessionDetail({ game, onClose, onEdit, onDelete }) {
                         </div>
                     ))}
                 </div>
+
+                {/* 投手成績 */}
+                {game.pitching && game.pitching.innings > 0 && (
+                    <div className="px-4 pb-3">
+                        <h4 className="text-xs font-heading font-semibold text-text-primary mb-2 flex items-center gap-1.5">
+                            ⚾ 投手成績
+                            {game.pitching.decision && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${game.pitching.decision === 'win' ? 'bg-accent-emerald/15 text-accent-emerald' :
+                                    game.pitching.decision === 'loss' ? 'bg-accent-red/15 text-accent-red' :
+                                        'bg-bg-input text-text-muted'
+                                    }`}>
+                                    {game.pitching.decision === 'win' ? '○' : game.pitching.decision === 'loss' ? '●' : '-'}
+                                </span>
+                            )}
+                        </h4>
+                        <div className="grid grid-cols-4 gap-1.5">
+                            {[
+                                { label: '回', value: game.pitching.innings },
+                                { label: '球数', value: game.pitching.pitchCount },
+                                { label: '被安打', value: game.pitching.hits },
+                                { label: '奪三振', value: game.pitching.strikeouts },
+                                { label: '四球', value: game.pitching.walks },
+                                { label: '失点', value: game.pitching.runs },
+                                { label: '自責', value: game.pitching.earnedRuns },
+                                { label: '対戦', value: game.pitching.battersFaced },
+                            ].map((s, i) => (
+                                <div key={i} className="bg-bg-input rounded p-1.5 text-center">
+                                    <div className="text-sm font-bold font-heading text-text-primary">{s.value || 0}</div>
+                                    <div className="text-[9px] text-text-muted">{s.label}</div>
+                                </div>
+                            ))}
+                        </div>
+                        {game.pitching.notes && (
+                            <p className="text-[10px] text-text-muted mt-1.5">{game.pitching.notes}</p>
+                        )}
+                    </div>
+                )}
+
+                {/* 守備記録 */}
+                {game.fielding && game.fielding.length > 0 && (
+                    <div className="px-4 pb-3">
+                        <h4 className="text-xs font-heading font-semibold text-text-primary mb-2">🧤 守備記録 ({game.fielding.length})</h4>
+                        <div className="space-y-1.5">
+                            {game.fielding.map((f, i) => {
+                                const posOpt = POSITION_OPTIONS.find(p => p.value === f.position);
+                                const playOpt = FIELDING_PLAY_OPTIONS.find(p => p.value === f.playType);
+                                const resultOpt = FIELDING_RESULT_OPTIONS.find(r => r.value === f.result);
+                                return (
+                                    <div key={f.id || i} className="bg-bg-input rounded p-2 flex items-center gap-2 text-xs">
+                                        <span className="text-text-muted font-mono text-[10px]">#{i + 1}</span>
+                                        {f.inning && <span className="text-[10px] text-text-muted">{f.inning}回</span>}
+                                        <span className="font-medium px-1.5 py-0.5 bg-accent-blue/10 text-accent-blue rounded text-[10px]">
+                                            {posOpt?.label || f.position}
+                                        </span>
+                                        <span className="text-text-secondary">{playOpt?.icon} {playOpt?.label}</span>
+                                        <span
+                                            className="font-medium px-1.5 py-0.5 rounded text-[10px]"
+                                            style={{ color: resultOpt?.color, backgroundColor: resultOpt?.color + '15' }}
+                                        >
+                                            {resultOpt?.label || f.result}
+                                        </span>
+                                        {f.notes && <span className="text-text-muted text-[10px] truncate flex-1">{f.notes}</span>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* アクションボタン */}
                 <div className="sticky bottom-0 bg-bg-card/95 backdrop-blur-sm border-t border-border p-4 flex gap-2">
