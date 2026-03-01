@@ -188,6 +188,8 @@ export function calculatePitchingStats(games) {
 
     const totalInnings = pitchingGames.reduce((s, g) => s + (g.pitching.innings || 0), 0);
     const totalPitchCount = pitchingGames.reduce((s, g) => s + (g.pitching.pitchCount || 0), 0);
+    const totalStrikesCount = pitchingGames.reduce((s, g) => s + (g.pitching.strikesCount || 0), 0);
+    const totalBallsCount = pitchingGames.reduce((s, g) => s + (g.pitching.ballsCount || 0), 0);
     const totalHits = pitchingGames.reduce((s, g) => s + (g.pitching.hits || 0), 0);
     const totalRuns = pitchingGames.reduce((s, g) => s + (g.pitching.runs || 0), 0);
     const totalEarnedRuns = pitchingGames.reduce((s, g) => s + (g.pitching.earnedRuns || 0), 0);
@@ -227,6 +229,8 @@ export function calculatePitchingStats(games) {
         gamesStarted: pitchingGames.length,
         totalInnings,
         totalPitchCount,
+        totalStrikesCount,
+        totalBallsCount,
         totalHits,
         totalRuns,
         totalEarnedRuns,

@@ -705,14 +705,32 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
         setIsAddingAtBat(false);
     };
 
-    // 投手成績の変更ハンドラ
+    // 投手成績の入力処理
     const handlePitchingChange = (field, value) => {
+        let processedValue = value;
+        // イニング数の特殊な入力変換（x.1 -> x + 1/3, x.2 -> x + 2/3, x.3 -> x + 1）
+        if (field === 'innings' && typeof value === 'number') {
+            const whole = Math.floor(value);
+            const fractionStr = (value - whole).toFixed(1);
+            if (fractionStr === '0.1') {
+                processedValue = whole + (1 / 3);
+            } else if (fractionStr === '0.2') {
+                processedValue = whole + (2 / 3);
+            } else if (fractionStr === '0.3') {
+                processedValue = whole + 1;
+            } else if (fractionStr !== '0.0' && fractionStr !== '0.3') {
+                // If it's already 1/3 or 2/3 (which happens due to precision or internal logic), keep it.
+                // Or if user pastes something else.
+                // We just rely on standard parseFloat if not matching .1, .2, .3.
+            }
+        }
+
         setGame(prev => ({
             ...prev,
             pitching: {
                 ...prev.pitching,
-                [field]: value,
-            },
+                [field]: processedValue
+            }
         }));
     };
 
@@ -725,6 +743,8 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                 pitching: {
                     innings: 0,
                     pitchCount: 0,
+                    strikesCount: 0,
+                    ballsCount: 0,
                     battersFaced: 0,
                     hits: 0,
                     runs: 0,
@@ -1041,15 +1061,37 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                         </FormField>
 
                         {/* 基本数値 */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-5 gap-3">
                             <FormField label="イニング">
                                 <input
                                     type="number"
                                     step="0.1"
                                     min="0"
                                     max="9"
-                                    value={game.pitching.innings || ''}
-                                    onChange={e => handlePitchingChange('innings', parseFloat(e.target.value) || 0)}
+                                    value={
+                                        game.pitching.innings === undefined || game.pitching.innings === null || game.pitching.innings === ''
+                                            ? ''
+                                            : (() => {
+                                                const val = game.pitching.innings;
+                                                const w = Math.floor(val);
+                                                const f = val - w;
+                                                if (Math.abs(f - 1 / 3) < 0.01) return w + 0.1;
+                                                if (Math.abs(f - 2 / 3) < 0.01) return w + 0.2;
+                                                return val;
+                                            })()
+                                    }
+                                    onChange={e => {
+                                        // Empty input
+                                        if (e.target.value === '') {
+                                            handlePitchingChange('innings', '');
+                                            return;
+                                        }
+                                        const rawVal = parseFloat(e.target.value);
+                                        // Ignore trailing dot intermediate states if possible, but onChange usually parses it
+                                        if (!isNaN(rawVal)) {
+                                            handlePitchingChange('innings', rawVal);
+                                        }
+                                    }}
                                     className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
                                 />
                             </FormField>
@@ -1059,6 +1101,24 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                                     min="0"
                                     value={game.pitching.pitchCount || ''}
                                     onChange={e => handlePitchingChange('pitchCount', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                            <FormField label="ストライク">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.strikesCount || ''}
+                                    onChange={e => handlePitchingChange('strikesCount', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                            <FormField label="ボール">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.ballsCount || ''}
+                                    onChange={e => handlePitchingChange('ballsCount', parseInt(e.target.value) || 0)}
                                     className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
                                 />
                             </FormField>

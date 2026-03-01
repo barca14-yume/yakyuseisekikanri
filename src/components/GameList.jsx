@@ -172,6 +172,7 @@ function SessionDetail({ game, onClose, onEdit, onDelete }) {
                             {[
                                 { label: '回', value: game.pitching.innings },
                                 { label: '球数', value: game.pitching.pitchCount },
+                                { label: 'S/B', value: `${game.pitching.strikesCount || 0}/${game.pitching.ballsCount || 0}` },
                                 { label: '被安打', value: game.pitching.hits },
                                 { label: '奪三振', value: game.pitching.strikeouts },
                                 { label: '四球', value: game.pitching.walks },

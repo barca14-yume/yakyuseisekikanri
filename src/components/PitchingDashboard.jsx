@@ -158,6 +158,7 @@ export default function PitchingDashboard({ games }) {
                     <div className="space-y-2">
                         {[
                             { label: '投球数', value: stats.totalPitchCount, sub: `平均${stats.avgPitchCount.toFixed(0)}球/試合` },
+                            { label: 'S / B', value: `${stats.totalStrikesCount} / ${stats.totalBallsCount}`, sub: stats.totalPitchCount > 0 ? `S率 ${((stats.totalStrikesCount / stats.totalPitchCount) * 100).toFixed(1)}%` : '-' },
                             { label: '被安打', value: stats.totalHits, sub: `被打率 ${stats.battingAgainst.toFixed(3)}` },
                             { label: '奪三振', value: stats.totalStrikeouts, sub: `K/BB ${stats.kbb.toFixed(2)}` },
                             { label: '四球', value: stats.totalWalks, sub: `死球 ${stats.totalHitBatters}` },
