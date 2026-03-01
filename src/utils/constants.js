@@ -19,13 +19,14 @@ export const RESULT_OPTIONS = [
     { value: 'FC', label: 'フィールダースチョイス', short: 'FC' },
     { value: 'E', label: 'エラー出塁', short: 'エラー' },
     { value: 'DP', label: '併殺打', short: '併殺' },
+    { value: 'F', label: 'ファール', short: 'F' },
 ];
 
 // ヒットと判定される結果
 export const HIT_RESULTS = ['1B', '2B', '3B', 'HR'];
 
-// 打数に含まれない結果（四球、死球、犠打、犠飛）
-export const NON_AB_RESULTS = ['BB', 'HBP', 'SAC', 'SF'];
+// 打数に含まれない結果（四球、死球、犠打、犠飛、ファール）
+export const NON_AB_RESULTS = ['BB', 'HBP', 'SAC', 'SF', 'F'];
 
 // インプレー結果（バットに当たった結果）
 export const IN_PLAY_RESULTS = ['1B', '2B', '3B', 'HR', 'GO', 'FO', 'LO', 'FC', 'E', 'DP'];
@@ -87,12 +88,14 @@ export const PITCH_RESULT_OPTIONS = [
 
 // ファウルの方向
 export const FOUL_DIRECTION_OPTIONS = [
+    { value: 'first-base-line', label: '一塁線' },
+    { value: 'third-base-line', label: '三塁線' },
+    { value: 'back', label: '後ろ（バックネット）' },
     { value: 'left', label: 'レフト方向' },
     { value: 'center-left', label: '左中間方向' },
     { value: 'center', label: 'センター方向' },
     { value: 'center-right', label: '右中間方向' },
     { value: 'right', label: 'ライト方向' },
-    { value: 'back', label: 'バックネット方向' },
     { value: 'bunt-foul', label: 'バントファウル' },
 ];
 

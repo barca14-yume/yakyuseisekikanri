@@ -81,10 +81,16 @@ export default function SprayChart({
     // 打球の色を決定する
     const getBallColor = (ab, gameType) => {
         const isHit = HIT_RESULTS.includes(ab.result);
+        const isFoul = ab.result === 'F';
+
         if (gameType === 'practice') {
-            return isHit ? '#fb923c' : '#7dd3fc';
+            if (isHit) return '#fb923c';
+            if (isFoul) return '#d8b4fe'; // 薄い紫
+            return '#7dd3fc';
         }
-        return isHit ? '#ef4444' : '#3b82f6';
+        if (isHit) return '#ef4444';
+        if (isFoul) return '#a855f7'; // 紫
+        return '#3b82f6';
     };
 
     // 打球の形状を決定する
@@ -337,6 +343,10 @@ export default function SprayChart({
                     <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 rounded-full border-2 border-[#7dd3fc] inline-block" style={{ borderStyle: 'dashed' }}></span>
                         <span className="text-text-secondary">練習アウト</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-border">
+                        <span className="w-3 h-3 rounded-full bg-[#a855f7] inline-block"></span>
+                        <span className="text-text-secondary">ファール</span>
                     </div>
                     <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-border">
                         <span className="w-3 h-3 rounded-full bg-text-muted inline-block"></span>

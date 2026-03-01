@@ -278,11 +278,19 @@ function AtBatForm({ atBat, onChange, onSave, onCancel, isNew }) {
     // 四球判定：4ボールで終了
     const isWalkByPitches = count.balls >= 4;
 
-    // 打席が完了しているか
-    const isAtBatComplete = hasTerminalPitch || isStrikeoutByPitches || isWalkByPitches;
+    // 打席が完了しているか（投球結果に基づく自動判定）
+    const isAtBatCompleteByPitches = hasTerminalPitch || isStrikeoutByPitches || isWalkByPitches;
+    // ユーザーが手動で結果を確定させたか（四球、三振、アウト、ヒットなど）
+    const isResultManuallySet = !!atBat.result && !isAtBatCompleteByPitches;
 
-    // 結果がインプレーを含む打席かどうか
-    const isInPlay = IN_PLAY_RESULTS.includes(atBat.result);
+    // 投球入力を隠す条件：投球によって打席が終わっている場合、または、
+    // まだ投球がないのに手動で結果（四球など）を指定して保存しようとしている場合。
+    // ※ただし、投球途中で結果を上書きした場合は投球を続けられるようにする？
+    // いや、原則として「既に結果が出ている」なら投球は追加できないのが自然。
+    const hidePitchInput = isAtBatCompleteByPitches;
+
+    // 結果がインプレー（またはファール）を含む打席かどうか
+    const isInPlay = IN_PLAY_RESULTS.includes(atBat.result) || atBat.result === 'F';
     const isStrikeout = atBat.result === 'K';
 
     const qualityColorMap = {};
@@ -441,7 +449,7 @@ function AtBatForm({ atBat, onChange, onSave, onCancel, isNew }) {
                 )}
 
                 {/* 投球入力フォーム or 追加ボタン */}
-                {!isAtBatComplete && (
+                {!hidePitchInput && (
                     showPitchInput ? (
                         <PitchInputForm
                             onAdd={handleAddPitch}
@@ -461,7 +469,7 @@ function AtBatForm({ atBat, onChange, onSave, onCancel, isNew }) {
                 )}
 
                 {/* 打席完了メッセージ */}
-                {isAtBatComplete && !hasTerminalPitch && (
+                {isAtBatCompleteByPitches && !hasTerminalPitch && (
                     <div className={`text-xs text-center py-2 rounded-lg font-medium ${isWalkByPitches
                         ? 'bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20'
                         : 'bg-accent-amber/10 text-accent-amber border border-accent-amber/20'
@@ -478,7 +486,7 @@ function AtBatForm({ atBat, onChange, onSave, onCancel, isNew }) {
                     <FormField label="打席結果（インプレーの結果を選択）">
                         <TagSelect
                             options={RESULT_OPTIONS.filter(o =>
-                                IN_PLAY_RESULTS.includes(o.value) || o.value === 'SAC' || o.value === 'SF'
+                                IN_PLAY_RESULTS.includes(o.value) || o.value === 'SAC' || o.value === 'SF' || o.value === 'F'
                             ).map(o => ({ ...o, label: o.short }))}
                             value={atBat.result}
                             onChange={v => onChange({ result: v })}
@@ -487,21 +495,21 @@ function AtBatForm({ atBat, onChange, onSave, onCancel, isNew }) {
                 </div>
             )}
 
-            {/* 投球なしで直接結果を入力（オプション） */}
-            {pitches.length === 0 && (
-                <div className="border-t border-border/30 pt-3">
-                    <p className="text-[10px] text-text-muted mb-2">
-                        ※投球記録なしで結果だけ入力する場合はこちら
-                    </p>
-                    <FormField label="打席結果（直接入力）">
-                        <TagSelect
-                            options={RESULT_OPTIONS.map(o => ({ ...o, label: o.short }))}
-                            value={atBat.result}
-                            onChange={v => onChange({ result: v })}
-                        />
-                    </FormField>
-                </div>
-            )}
+            {/* 直接結果を入力（オプション） */}
+            <div className={`border-t border-border/30 pt-3 ${pitches.length > 0 ? 'mt-4' : ''}`}>
+                <p className="text-[10px] text-text-muted mb-2">
+                    {pitches.length > 0
+                        ? '※手動で四球や三振などの結果を直接指定・上書きする場合はこちら'
+                        : '※投球記録なしで結果だけ入力する場合はこちら'}
+                </p>
+                <FormField label="打席結果（すべての選択肢）">
+                    <TagSelect
+                        options={RESULT_OPTIONS.map(o => ({ ...o, label: o.short }))}
+                        value={atBat.result}
+                        onChange={v => onChange({ result: v })}
+                    />
+                </FormField>
+            </div>
 
             {/* 三振の詳細（投球記録から自動設定されるが、手動でも変更可） */}
             {isStrikeout && (
@@ -601,7 +609,8 @@ function ResultBadge({ result }) {
     const bgColor = isHit ? 'bg-accent-red/20 text-accent-red' :
         result === 'K' ? 'bg-accent-amber/20 text-accent-amber' :
             result === 'BB' || result === 'HBP' ? 'bg-accent-emerald/20 text-accent-emerald' :
-                'bg-bg-input text-text-secondary';
+                result === 'F' ? 'bg-purple-500/20 text-purple-400' :
+                    'bg-bg-input text-text-secondary';
 
     return (
         <span className={`px-2 py-0.5 rounded text-xs font-bold ${bgColor}`}>
@@ -985,171 +994,167 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                 )}
             </div>
 
-            {/* 投手成績セクション（試合のみ） */}
-            {isGameType && (
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-heading font-semibold text-text-primary">⚾ 投手成績</h3>
-                        {!showPitching ? (
-                            <button
-                                type="button"
-                                onClick={handleEnablePitching}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20 rounded-lg text-xs font-medium hover:bg-accent-emerald/20 transition-all"
-                            >
-                                <Plus size={14} />
-                                登板記録を追加
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={handleDisablePitching}
-                                className="text-xs text-accent-red hover:text-red-400 transition-colors"
-                            >
-                                登板記録を削除
-                            </button>
-                        )}
-                    </div>
+            {/* 投手成績セクション（試合・練習共通） */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-heading font-semibold text-text-primary">⚾ 投手成績</h3>
+                    {!showPitching ? (
+                        <button
+                            type="button"
+                            onClick={handleEnablePitching}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20 rounded-lg text-xs font-medium hover:bg-accent-emerald/20 transition-all"
+                        >
+                            <Plus size={14} />
+                            登板記録を追加
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={handleDisablePitching}
+                            className="text-xs text-accent-red hover:text-red-400 transition-colors"
+                        >
+                            登板記録を削除
+                        </button>
+                    )}
+                </div>
 
-                    {showPitching && game.pitching && (
-                        <div className="glass rounded-xl p-4 space-y-4 animate-fadeIn">
-                            {/* 勝敗 */}
-                            <FormField label="勝敗">
-                                <div className="flex flex-wrap gap-1.5">
-                                    {PITCHING_DECISION_OPTIONS.map(opt => (
-                                        <button
-                                            key={opt.value}
-                                            type="button"
-                                            onClick={() => handlePitchingChange('decision', opt.value)}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${game.pitching.decision === opt.value
-                                                    ? 'border-current shadow-sm'
-                                                    : 'border-border text-text-muted hover:text-text-secondary'
-                                                }`}
-                                            style={game.pitching.decision === opt.value ? { color: opt.color, backgroundColor: opt.color + '15' } : {}}
-                                        >
-                                            {opt.label}
-                                        </button>
-                                    ))}
-                                </div>
+                {showPitching && game.pitching && (
+                    <div className="glass rounded-xl p-4 space-y-4 animate-fadeIn">
+                        {/* 勝敗 */}
+                        <FormField label="勝敗">
+                            <div className="flex flex-wrap gap-1.5">
+                                {PITCHING_DECISION_OPTIONS.map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => handlePitchingChange('decision', opt.value)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${game.pitching.decision === opt.value
+                                            ? 'border-current shadow-sm'
+                                            : 'border-border text-text-muted hover:text-text-secondary'
+                                            }`}
+                                        style={game.pitching.decision === opt.value ? { color: opt.color, backgroundColor: opt.color + '15' } : {}}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </FormField>
+
+                        {/* 基本数値 */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <FormField label="イニング">
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="9"
+                                    value={game.pitching.innings || ''}
+                                    onChange={e => handlePitchingChange('innings', parseFloat(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
                             </FormField>
-
-                            {/* 基本数値 */}
-                            <div className="grid grid-cols-3 gap-3">
-                                <FormField label="イニング">
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        min="0"
-                                        max="9"
-                                        value={game.pitching.innings || ''}
-                                        onChange={e => handlePitchingChange('innings', parseFloat(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                                <FormField label="投球数">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={game.pitching.pitchCount || ''}
-                                        onChange={e => handlePitchingChange('pitchCount', parseInt(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                                <FormField label="対戦打者">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={game.pitching.battersFaced || ''}
-                                        onChange={e => handlePitchingChange('battersFaced', parseInt(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                            </div>
-
-                            <div className="grid grid-cols-4 gap-3">
-                                <FormField label="被安打">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={game.pitching.hits || ''}
-                                        onChange={e => handlePitchingChange('hits', parseInt(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                                <FormField label="奪三振">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={game.pitching.strikeouts || ''}
-                                        onChange={e => handlePitchingChange('strikeouts', parseInt(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                                <FormField label="四球">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={game.pitching.walks || ''}
-                                        onChange={e => handlePitchingChange('walks', parseInt(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                                <FormField label="死球">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={game.pitching.hitBatters || ''}
-                                        onChange={e => handlePitchingChange('hitBatters', parseInt(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                            </div>
-
-                            <div className="grid grid-cols-4 gap-3">
-                                <FormField label="失点">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={game.pitching.runs || ''}
-                                        onChange={e => handlePitchingChange('runs', parseInt(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                                <FormField label="自責点">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={game.pitching.earnedRuns || ''}
-                                        onChange={e => handlePitchingChange('earnedRuns', parseInt(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                                <FormField label="暴投">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={game.pitching.wildPitches || ''}
-                                        onChange={e => handlePitchingChange('wildPitches', parseInt(e.target.value) || 0)}
-                                        className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
-                                    />
-                                </FormField>
-                            </div>
-
-                            <FormField label="メモ">
-                                <textarea
-                                    value={game.pitching.notes || ''}
-                                    onChange={e => handlePitchingChange('notes', e.target.value)}
-                                    rows={2}
-                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary resize-none"
-                                    placeholder="投手成績に関するメモ..."
+                            <FormField label="投球数">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.pitchCount || ''}
+                                    onChange={e => handlePitchingChange('pitchCount', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                            <FormField label="対戦打者">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.battersFaced || ''}
+                                    onChange={e => handlePitchingChange('battersFaced', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
                                 />
                             </FormField>
                         </div>
-                    )}
-                </div>
-            )}
 
-            {/* 守備記録セクション（試合のみ） */}
-            {isGameType && (
+                        <div className="grid grid-cols-4 gap-3">
+                            <FormField label="被安打">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.hits || ''}
+                                    onChange={e => handlePitchingChange('hits', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                            <FormField label="奪三振">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.strikeouts || ''}
+                                    onChange={e => handlePitchingChange('strikeouts', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                            <FormField label="四球">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.walks || ''}
+                                    onChange={e => handlePitchingChange('walks', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                            <FormField label="死球">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.hitBatters || ''}
+                                    onChange={e => handlePitchingChange('hitBatters', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-3">
+                            <FormField label="失点">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.runs === 0 ? "0" : (game.pitching.runs || '')}
+                                    onChange={e => handlePitchingChange('runs', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                            <FormField label="自責点">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.earnedRuns === 0 ? "0" : (game.pitching.earnedRuns || '')}
+                                    onChange={e => handlePitchingChange('earnedRuns', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                            <FormField label="暴投">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={game.pitching.wildPitches === 0 ? "0" : (game.pitching.wildPitches || '')}
+                                    onChange={e => handlePitchingChange('wildPitches', parseInt(e.target.value) || 0)}
+                                    className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary text-center"
+                                />
+                            </FormField>
+                        </div>
+
+                        <FormField label="メモ">
+                            <textarea
+                                value={game.pitching.notes || ''}
+                                onChange={e => handlePitchingChange('notes', e.target.value)}
+                                rows={2}
+                                className="w-full bg-bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-primary resize-none"
+                                placeholder="投手成績に関するメモ..."
+                            />
+                        </FormField>
+                    </div>
+                )}
+
+                {/* 守備記録セクション（試合・練習共通） */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-heading font-semibold text-text-primary">🧤 守備記録 ({game.fielding?.length || 0})</h3>
@@ -1248,8 +1253,8 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                                             type="button"
                                             onClick={() => setEditingFieldingPlay(prev => ({ ...prev, playType: opt.value }))}
                                             className={`px-2.5 py-1.5 rounded-lg text-xs transition-all border ${editingFieldingPlay.playType === opt.value
-                                                    ? 'bg-accent-blue/15 text-accent-blue border-accent-blue/30'
-                                                    : 'border-border text-text-muted hover:text-text-secondary'
+                                                ? 'bg-accent-blue/15 text-accent-blue border-accent-blue/30'
+                                                : 'border-border text-text-muted hover:text-text-secondary'
                                                 }`}
                                         >
                                             {opt.icon} {opt.label}
@@ -1266,8 +1271,8 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                                             type="button"
                                             onClick={() => setEditingFieldingPlay(prev => ({ ...prev, result: opt.value }))}
                                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${editingFieldingPlay.result === opt.value
-                                                    ? 'border-current shadow-sm'
-                                                    : 'border-border text-text-muted hover:text-text-secondary'
+                                                ? 'border-current shadow-sm'
+                                                : 'border-border text-text-muted hover:text-text-secondary'
                                                 }`}
                                             style={editingFieldingPlay.result === opt.value ? { color: opt.color, backgroundColor: opt.color + '15' } : {}}
                                         >
@@ -1314,26 +1319,26 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                         </div>
                     )}
                 </div>
-            )}
 
-            {/* 全体の保存/キャンセル */}
-            <div className="flex gap-3 pt-2">
-                <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={!game.date}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-accent-emerald to-accent-cyan text-white px-6 py-3 rounded-xl text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-accent-emerald/20 transition-all duration-300"
-                >
-                    <Save size={18} />
-                    {editGame ? 'セッションを更新' : 'セッションを保存'}
-                </button>
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="px-6 py-3 rounded-xl text-sm text-text-secondary border border-border hover:border-border-light hover:text-text-primary transition-all duration-200"
-                >
-                    キャンセル
-                </button>
+                {/* 全体の保存/キャンセル */}
+                <div className="flex gap-3 pt-2">
+                    <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={!game.date}
+                        className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-accent-emerald to-accent-cyan text-white px-6 py-3 rounded-xl text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-accent-emerald/20 transition-all duration-300"
+                    >
+                        <Save size={18} />
+                        {editGame ? 'セッションを更新' : 'セッションを保存'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-6 py-3 rounded-xl text-sm text-text-secondary border border-border hover:border-border-light hover:text-text-primary transition-all duration-200"
+                    >
+                        キャンセル
+                    </button>
+                </div>
             </div>
         </div>
     );
