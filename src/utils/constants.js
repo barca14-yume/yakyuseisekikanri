@@ -109,8 +109,10 @@ export const STRIKEOUT_TYPE_OPTIONS = [
 export const BAT_OPTIONS = [
     { value: 'Legacy 78cm', label: 'Legacy 78cm' },
     { value: 'Legacy 80cm', label: 'Legacy 80cm' },
+    { value: 'Select9 80cm', label: 'セレクトナイン 80cm' },
+    { value: 'LiteKing 76cm', label: 'ライトキング 76cm' },
+    { value: 'GetLineBat', label: 'ゲットラインバット' },
     { value: 'Wooden', label: '木製バット' },
-    { value: 'iota 78cm', label: 'iota 78cm' },
     { value: 'Other', label: 'その他' },
 ];
 
@@ -118,6 +120,7 @@ export const BAT_OPTIONS = [
 export const SESSION_TYPE_OPTIONS = [
     { value: 'game', label: '公式戦 / 練習試合' },
     { value: 'practice', label: '練習（フリーバッティング等）' },
+    { value: 'batting_center', label: 'バッティングセンター' },
 ];
 
 // 塁打数のマッピング

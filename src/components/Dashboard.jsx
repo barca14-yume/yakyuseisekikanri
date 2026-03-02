@@ -47,6 +47,7 @@ function FilterToggle({ value, onChange }) {
         { key: 'all', label: 'すべて', icon: Layers },
         { key: 'game', label: '試合', icon: Swords },
         { key: 'practice', label: '練習', icon: Dumbbell },
+        { key: 'batting_center', label: 'バッセン', icon: Target },
     ];
 
     return (
@@ -150,7 +151,7 @@ export default function Dashboard({ games }) {
 
     // フィルタリングされたゲームデータ
     const filteredGames = useMemo(() => {
-        if (filter === 'all') return games;
+        if (filter === 'all') return games.filter(g => g.type !== 'batting_center');
         return games.filter(g => g.type === filter);
     }, [games, filter]);
 
@@ -169,7 +170,7 @@ export default function Dashboard({ games }) {
     }, [games]);
 
     const sprayAtBats = useMemo(() => {
-        if (filter === 'all') return allAtBatsForSpray;
+        if (filter === 'all') return allAtBatsForSpray.filter(ab => ab._gameType !== 'batting_center');
         return allAtBatsForSpray.filter(ab => ab._gameType === filter);
     }, [allAtBatsForSpray, filter]);
 

@@ -250,7 +250,7 @@ export default function GameList({ games, onEdit, onDelete }) {
 
     const filteredGames = useMemo(() => {
         const sorted = [...games].sort((a, b) => new Date(b.date) - new Date(a.date));
-        if (typeFilter === 'all') return sorted;
+        if (typeFilter === 'all') return sorted.filter(g => g.type !== 'batting_center');
         return sorted.filter(g => g.type === typeFilter);
     }, [games, typeFilter]);
 
@@ -272,6 +272,7 @@ export default function GameList({ games, onEdit, onDelete }) {
                     { key: 'all', label: 'すべて' },
                     { key: 'game', label: '試合' },
                     { key: 'practice', label: '練習' },
+                    { key: 'batting_center', label: 'バッセン' },
                 ].map(opt => (
                     <button
                         key={opt.key}
@@ -309,9 +310,11 @@ export default function GameList({ games, onEdit, onDelete }) {
                                         <h4 className="font-heading font-semibold text-text-primary text-sm truncate">
                                             {isGame ? (game.opponent || '試合') : (game.tournament || '練習')}
                                         </h4>
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${isGame ? 'bg-accent-blue/10 text-accent-blue' : 'bg-accent-amber/10 text-accent-amber'
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${isGame ? 'bg-accent-blue/10 text-accent-blue'
+                                                : game.type === 'batting_center' ? 'bg-accent-purple/10 text-accent-purple'
+                                                    : 'bg-accent-amber/10 text-accent-amber'
                                             }`}>
-                                            {isGame ? '試合' : '練習'}
+                                            {isGame ? '試合' : game.type === 'batting_center' ? 'バッセン' : '練習'}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2 mt-0.5">

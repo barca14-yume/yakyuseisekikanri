@@ -8,7 +8,7 @@ import { useState, useCallback, useMemo } from 'react';
 import {
     Plus, Save, X, ChevronDown, ChevronUp, Trash2,
     Calendar, Users, Trophy, Swords, Dumbbell, StickyNote,
-    Circle, Undo2,
+    Circle, Undo2, Target,
 } from 'lucide-react';
 import SprayChart from './SprayChart';
 import {
@@ -829,11 +829,13 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                         className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${game.type === opt.value
                             ? game.type === 'game'
                                 ? 'bg-gradient-to-r from-accent-blue to-accent-cyan text-white shadow-lg'
-                                : 'bg-gradient-to-r from-accent-amber to-accent-orange text-white shadow-lg'
+                                : game.type === 'batting_center'
+                                    ? 'bg-gradient-to-r from-accent-purple to-pink-500 text-white shadow-lg'
+                                    : 'bg-gradient-to-r from-accent-amber to-accent-orange text-white shadow-lg'
                             : 'text-text-secondary hover:text-text-primary'
                             }`}
                     >
-                        {opt.value === 'game' ? <Swords size={16} /> : <Dumbbell size={16} />}
+                        {opt.value === 'game' ? <Swords size={16} /> : opt.value === 'batting_center' ? <Target size={16} /> : <Dumbbell size={16} />}
                         {opt.label}
                     </button>
                 ))}
@@ -842,8 +844,8 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
             {/* 基本情報 */}
             <div className="glass rounded-xl p-4 space-y-4">
                 <h3 className="text-sm font-heading font-semibold text-text-primary flex items-center gap-2">
-                    {isGameType ? <Swords size={16} className="text-accent-blue" /> : <Dumbbell size={16} className="text-accent-amber" />}
-                    {isGameType ? '試合情報' : '練習情報'}
+                    {game.type === 'game' ? <Swords size={16} className="text-accent-blue" /> : game.type === 'batting_center' ? <Target size={16} className="text-accent-purple" /> : <Dumbbell size={16} className="text-accent-amber" />}
+                    {game.type === 'game' ? '試合情報' : game.type === 'batting_center' ? 'バッセン情報' : '練習情報'}
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -874,7 +876,7 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                         </FormField>
                     )}
 
-                    <FormField label={isGameType ? '大会名' : '練習内容'}>
+                    <FormField label={game.type === 'game' ? '大会名' : game.type === 'batting_center' ? '施設名・場所' : '練習内容'}>
                         <div className="relative">
                             <Trophy size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
                             <input
@@ -882,7 +884,7 @@ export default function GameForm({ onSave, onCancel, editGame = null }) {
                                 value={game.tournament}
                                 onChange={e => handleGameChange({ tournament: e.target.value })}
                                 className="w-full bg-bg-input border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-text-primary focus:border-accent-blue focus:outline-none transition-colors"
-                                placeholder={isGameType ? '例：春季大会' : '例：フリーバッティング'}
+                                placeholder={game.type === 'game' ? '例：春季大会' : game.type === 'batting_center' ? '例：ラウンドワン' : '例：フリーバッティング'}
                             />
                         </div>
                     </FormField>
