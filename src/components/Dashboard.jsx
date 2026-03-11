@@ -478,14 +478,14 @@ export default function Dashboard({ games }) {
                                     <Activity size={16} className="text-accent-amber" />
                                     結果の内訳
                                 </h3>
-                                <ResponsiveContainer width="100%" height={180}>
-                                    <PieChart>
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                                         <Pie
                                             data={resultDistribution}
                                             cx="50%"
                                             cy="50%"
                                             innerRadius={40}
-                                            outerRadius={70}
+                                            outerRadius={65}
                                             dataKey="value"
                                             paddingAngle={2}
                                             label={({ name, value }) => `${name}(${value})`}

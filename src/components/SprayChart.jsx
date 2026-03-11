@@ -327,38 +327,41 @@ export default function SprayChart({
 
             {/* 凡例 */}
             {showLegend && (
-                <div className="flex flex-wrap gap-3 mt-3 justify-center text-xs">
+                <div className="flex flex-wrap gap-y-2 gap-x-3 mt-4 justify-center text-xs pb-2">
                     <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 rounded-full bg-[#ef4444] inline-block"></span>
-                        <span className="text-text-secondary">試合ヒット</span>
+                        <span className="text-text-secondary whitespace-nowrap">試合ヒット</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 rounded-full bg-[#3b82f6] inline-block"></span>
-                        <span className="text-text-secondary">試合アウト</span>
+                        <span className="text-text-secondary whitespace-nowrap">試合アウト</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 rounded-full border-2 border-[#fb923c] inline-block" style={{ borderStyle: 'dashed' }}></span>
-                        <span className="text-text-secondary">練習ヒット</span>
+                        <span className="text-text-secondary whitespace-nowrap">練習ヒット</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 rounded-full border-2 border-[#7dd3fc] inline-block" style={{ borderStyle: 'dashed' }}></span>
-                        <span className="text-text-secondary">練習アウト</span>
+                        <span className="text-text-secondary whitespace-nowrap">練習アウト</span>
                     </div>
-                    <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-border">
+                    <div className="flex items-center gap-1.5 ml-1 pl-2 border-l border-border">
                         <span className="w-3 h-3 rounded-full bg-[#a855f7] inline-block"></span>
-                        <span className="text-text-secondary">ファール</span>
+                        <span className="text-text-secondary whitespace-nowrap">ファール</span>
                     </div>
-                    <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-border">
+                    
+                    <div className="w-full h-px bg-border/30 my-1 hidden sm:block"></div>
+
+                    <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 rounded-full bg-text-muted inline-block"></span>
-                        <span className="text-text-secondary">ゴロ</span>
+                        <span className="text-text-secondary whitespace-nowrap">ゴロ</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 bg-text-muted inline-block" style={{ transform: 'rotate(45deg)', borderRadius: '1px' }}></span>
-                        <span className="text-text-secondary">ライナー</span>
+                        <span className="text-text-secondary whitespace-nowrap">ライナー</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <span className="inline-block" style={{ width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderBottom: '10px solid #64748b' }}></span>
-                        <span className="text-text-secondary">フライ</span>
+                        <span className="text-text-secondary whitespace-nowrap">フライ</span>
                     </div>
                 </div>
             )}
